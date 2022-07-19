@@ -1,0 +1,13 @@
+{
+  "domain": "solis_ginlong",
+  "name": "solis_ginglong_local_logger_server",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/solis_ginlong",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@Rapsssito"],
+  "iot_class": "local_push"
+}
