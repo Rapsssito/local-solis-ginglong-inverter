@@ -1,8 +1,9 @@
 {
-  "domain": "solis_ginlong",
-  "name": "solis_ginglong_local_logger_server",
+  "domain": "solis_ginglong_local_logger_server",
+  "name": "Solis/Ginglong Local Logger Server",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/solis_ginlong",
+  "version": "0.0.1",
   "requirements": [],
   "ssdp": [],
   "zeroconf": [],

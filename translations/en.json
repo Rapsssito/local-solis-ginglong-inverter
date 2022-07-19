@@ -4,16 +4,13 @@
       "already_configured": "Device is already configured"
     },
     "error": {
-      "cannot_connect": "Failed to connect",
-      "invalid_auth": "Invalid authentication",
+      "cannot_create_server": "Failed to create server in that port",
       "unknown": "Unexpected error"
     },
     "step": {
       "user": {
         "data": {
-          "host": "Host",
-          "password": "Password",
-          "username": "Username"
+          "listening_port": "Listening port"
         }
       }
     }
