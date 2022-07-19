@@ -42,7 +42,7 @@ def _mock_server_response(data):
     buffer.write(pack("<I", unix_time))  # unix_time
     buffer.write(b'\x78\x00\x00\x00')
     checksum_data = buffer.getvalue()
-    buffer.write(pack("<B", checksum_byte(checksum_data[1:])))
+    buffer.write(pack("<B", _checksum_byte(checksum_data[1:])))
     buffer.write(b'\x15')
 
     return buffer.getvalue()
@@ -64,7 +64,8 @@ class LoggerServer:
         _LOGGER.error("Send: %r" % response)
         writer.close()
         # Convert data to dict and pass to on_data
-        self.on_data(_extract_data(data))
+        if data[4] == 0x42:
+            self.on_data(_extract_data(data))
 
     async def start_server(self):
         self.server = await asyncio.start_server(self._handle_connection, '0.0.0.0', self.port)

@@ -28,19 +28,6 @@ from .server import LoggerServer
 
 _LOGGER = logging.getLogger(__name__)
 
-# PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-#     {
-#         vol.Required(CONF_ACCESS_TOKEN): cv.string,
-#         vol.Required(CONF_REPOS): vol.All(cv.ensure_list, [REPO_SCHEMA]),
-#         vol.Optional(CONF_URL): cv.url,
-#     }
-# )
-
-
-def _on_data(data: Dict[str, Any]) -> None:
-    """Handle data from the server."""
-    _LOGGER.error("Got data: %s", data)
-
 async def async_setup_entry(
     hass: core.HomeAssistant,
     config_entry: config_entries.ConfigEntry,
@@ -48,15 +35,26 @@ async def async_setup_entry(
 ):
     """Setup sensors from a config entry created in the integrations UI."""
     config = hass.data[DOMAIN][config_entry.entry_id]
-    _LOGGER.error('1 Called async_setup_entry with config: %s', config)
-    listening_port = config_entry.data[LISTENING_PORT]
-    server = LoggerServer(listening_port, _on_data)
-    _LOGGER.error('2 Called async_setup_entry with config: %s', config)
-    await server.start_server()
-    # async_add_entities([SolisGinlongLocalLoggerServerSensor(config, server)])
+    async_add_entities([LoggerServerEntity(config)])
 
-    # sensors = [GitHubRepoSensor(github, repo) for repo in config[CONF_REPOS]]
-    # async_add_entities(sensors, update_before_add=True)
+
+class LoggerServerEntity(Entity):
+    should_poll = False
+
+    def __init__(self, config_data):
+        self._server = LoggerServer(config_data[LISTENING_PORT], self._on_data)
+
+    def _on_data(self, data: Dict[str, Any]):
+        _LOGGER.error("Got data: %s", data)
+        self._data = data
+
+    async def async_added_to_hass(self):
+        """Run when this Entity has been added to HA."""
+        await self._server.start_server()
+
+    async def async_will_remove_from_hass(self):
+        """Entity being removed from hass."""
+        await self._server.stop_server()
 
 
 # async def async_setup_platform(
@@ -70,7 +68,6 @@ async def async_setup_entry(
 #     github = GitHubAPI(session, "requester", oauth_token=config[CONF_ACCESS_TOKEN])
 #     sensors = [GitHubRepoSensor(github, repo) for repo in config[CONF_REPOS]]
 #     async_add_entities(sensors, update_before_add=True)
-
 
 # class GitHubRepoSensor(Entity):
 #     """Representation of a GitHub Repo sensor."""
