@@ -58,10 +58,8 @@ class LoggerServer:
         if len(data) == 0:
             return
         addr = writer.get_extra_info('peername')
-        _LOGGER.error("Received %r from %r" % (data, addr))
         response = _mock_server_response(data)
         writer.write(response)
-        _LOGGER.error("Send: %r" % response)
         writer.close()
         # Convert data to dict and pass to on_data
         if data[4] == 0x42:
@@ -69,9 +67,7 @@ class LoggerServer:
 
     async def start_server(self):
         self.server = await asyncio.start_server(self._handle_connection, '0.0.0.0', self.port)
-        _LOGGER.error(f"Server started at port {self.port}")
 
     async def stop_server(self):
         self.server.close()
         await self.server.wait_closed()
-        _LOGGER.error(f"Server stopped at port {self.port}")

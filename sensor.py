@@ -28,6 +28,7 @@ from .server import LoggerServer
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(
     hass: core.HomeAssistant,
     config_entry: config_entries.ConfigEntry,
@@ -35,18 +36,30 @@ async def async_setup_entry(
 ):
     """Setup sensors from a config entry created in the integrations UI."""
     config = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([LoggerServerEntity(config)])
+    async_add_entities([LoggerServerEntity(config, async_add_entities)])
 
 
 class LoggerServerEntity(Entity):
     should_poll = False
+    unique_id = 'solis_ginglong_local_logger_server'
+    name = 'Solis/Ginglong Local Logger Server'
 
-    def __init__(self, config_data):
+    def __init__(self, config_data, async_add_entities):
+        _LOGGER.error("Config data: %s", config_data)
         self._server = LoggerServer(config_data[LISTENING_PORT], self._on_data)
+        self._async_add_entities = async_add_entities
+        self._inverters = dict()
 
     def _on_data(self, data: Dict[str, Any]):
         _LOGGER.error("Got data: %s", data)
-        self._data = data
+        inverter_id = data["inverter_serial_number"]
+        inverter_logger = self._inverters.get(inverter_id, None)
+        if inverter_logger is None:
+            _LOGGER.error("Creating new inverter logger for %s", inverter_id)
+            inverter_logger = InverterLogEntity(inverter_id)
+            self._inverters[inverter_id] = inverter_logger
+            self._async_add_entities([inverter_logger])
+        inverter_logger.set_data(data)
 
     async def async_added_to_hass(self):
         """Run when this Entity has been added to HA."""
@@ -57,17 +70,26 @@ class LoggerServerEntity(Entity):
         await self._server.stop_server()
 
 
-# async def async_setup_platform(
-#     hass: HomeAssistantType,
-#     config: ConfigType,
-#     async_add_entities: Callable,
-#     discovery_info: Optional[DiscoveryInfoType] = None,
-# ) -> None:
-#     """Set up the sensor platform."""
-#     session = async_get_clientsession(hass)
-#     github = GitHubAPI(session, "requester", oauth_token=config[CONF_ACCESS_TOKEN])
-#     sensors = [GitHubRepoSensor(github, repo) for repo in config[CONF_REPOS]]
-#     async_add_entities(sensors, update_before_add=True)
+class InverterLogEntity(Entity):
+    should_poll = False
+
+    def __init__(self, inverter_id):
+        self._inverter_id = inverter_id
+
+    def set_data(self, data):
+        self._data = data
+
+    @property
+    def name(self) -> str:
+        return f"{self._inverter_id} Logger"
+
+    @property
+    def state(self) -> float:
+        return self._data["inverter_temperature"]
+
+    @property
+    def unique_id(self) -> str:
+        return self._inverter_id
 
 # class GitHubRepoSensor(Entity):
 #     """Representation of a GitHub Repo sensor."""
