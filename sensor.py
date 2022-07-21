@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription, SensorEntity, SensorStateClass
 from homeassistant.helpers.entity import Entity, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.const import FREQUENCY_HERTZ, TEMP_CELSIUS, ELECTRIC_POTENTIAL_VOLT, POWER_WATT
+from homeassistant.const import FREQUENCY_HERTZ, TEMP_CELSIUS, ELECTRIC_POTENTIAL_VOLT, POWER_WATT, ELECTRIC_CURRENT_AMPERE, ENERGY_WATT_HOUR
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import DOMAIN, LISTENING_PORT
@@ -50,9 +50,9 @@ class LoggerServerEntity(Entity):
     async def async_added_to_hass(self):
         """Run when this Entity has been added to HA."""
         await self._server.start_server()
-        dummy_data = {'inverter_serial_number': '110CD22170500290', 'inverter_temperature': 32.5, 'dc_voltage_pv1': 4.5, 'dc_current': 0.0, 'ac_current_t_w_c': 0.0, 'ac_voltage_t_w_c': 225.4,
-                      'ac_output_frequency': 50.0, 'daily_active_generation': 22.5, 'total_dc_input_power': 0.0, 'total_active_generation': 57.0, 'generation_yesterday': 25.200000000000003, 'power_grid_total_apparent_power': 0.0, 'power_consumption': 200}
-        self._on_data(dummy_data)
+        # dummy_data = {'inverter_serial_number': '110CD22170500290', 'inverter_temperature': 62.300000000000004, 'dc_voltage': 282.8, 'dc_current': 10.8, 'ac_current_t_w_c': 13.100000000000001, 'ac_voltage_t_w_c': 227.5,
+        #               'ac_output_frequency': 49.97, 'daily_active_generation': 13.200000000000001, 'total_dc_input_power': 3054, 'total_active_generation': 70.0, 'generation_yesterday': 22.5, 'power_grid_total_apparent_power': 2980.0, 'power_consumption': 1618}
+        # self._on_data(dummy_data)
 
     async def async_will_remove_from_hass(self):
         """Entity being removed from hass."""
@@ -82,6 +82,30 @@ class LoggerSensorEntityDescription(SensorEntityDescription):
 
 ENTITIES_DESCRIPTIONS = [
     LoggerSensorEntityDescription(
+        name='Net power usage',
+        key='net_power_usage',
+        get_value=lambda x: x.data['power_consumption'] - x.data['total_dc_input_power'],
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=POWER_WATT,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    LoggerSensorEntityDescription(
+        name='Grid power consumption',
+        key='grid_power_consumption',
+        get_value=lambda x: max(x.data['power_consumption'] - x.data['total_dc_input_power'], 0),
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    LoggerSensorEntityDescription(
+        name='Grid power return',
+        key='grid_power_return',
+        get_value=lambda x: max(x.data['total_dc_input_power'] - x.data['power_consumption'], 0),
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    LoggerSensorEntityDescription(
         name='Power consumption',
         key='power_consumption',
         get_value=lambda x: x.data['power_consumption'],
@@ -89,11 +113,33 @@ ENTITIES_DESCRIPTIONS = [
         native_unit_of_measurement=POWER_WATT,
     ),
     LoggerSensorEntityDescription(
+        name='Solar power generation',
+        key='solar_power_generation',
+        get_value=lambda x: x.data['total_dc_input_power'],
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    LoggerSensorEntityDescription(
         name='Inverter temperature',
         key='inverter_temperature',
         get_value=lambda x: x.data['inverter_temperature'],
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
+    ),
+    LoggerSensorEntityDescription(
+        name='DC input voltage',
+        key='dc_input_voltage',
+        get_value=lambda x: x.data['dc_voltage'],
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+    ),
+    LoggerSensorEntityDescription(
+        name='DC input current',
+        key='dc_input_current',
+        get_value=lambda x: x.data['dc_current'],
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
     ),
     LoggerSensorEntityDescription(
         name='AC output voltage',

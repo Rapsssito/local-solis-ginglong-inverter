@@ -16,16 +16,16 @@ def _extract_data(buffer):
     return {
         "inverter_serial_number":           buffer[32:48].decode("ascii").rstrip(),
         "inverter_temperature":             0.1 * unpack_from("<H", buffer, 48)[0],
-        "dc_voltage_pv1":                   0.1 * unpack_from("<H", buffer, 50)[0],  # could also be 52
+        "dc_voltage":                       0.1 * unpack_from("<H", buffer, 50)[0],  # could also be 52
         "dc_current":                       0.1 * unpack_from("<H", buffer, 54)[0],
         "ac_current_t_w_c":                 0.1 * unpack_from("<H", buffer, 62)[0],
         "ac_voltage_t_w_c":                 0.1 * unpack_from("<H", buffer, 68)[0],
         "ac_output_frequency":              0.01 * unpack_from("<H", buffer, 70)[0],
         "daily_active_generation":          0.01 * unpack_from("<H", buffer, 76)[0],
-        "total_dc_input_power":             float(unpack_from("<I", buffer, 116)[0]),
-        "total_active_generation":          float(unpack_from("<I", buffer, 120)[0]),  # or 130
+        "total_dc_input_power":             int(unpack_from("<I", buffer, 116)[0]),
+        "total_active_generation":          int(unpack_from("<I", buffer, 120)[0]),  # or 130
         "generation_yesterday":             0.1 * unpack_from("<H", buffer, 128)[0],
-        "power_grid_total_apparent_power":  float(unpack_from("<I", buffer, 142)[0]),
+        "power_grid_total_apparent_power":  int(unpack_from("<I", buffer, 142)[0]),
         "power_consumption":                int(unpack_from("<I", buffer, 226)[0]),
     }
 
