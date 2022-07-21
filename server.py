@@ -26,6 +26,7 @@ def _extract_data(buffer):
         "total_active_generation":          float(unpack_from("<I", buffer, 120)[0]),  # or 130
         "generation_yesterday":             0.1 * unpack_from("<H", buffer, 128)[0],
         "power_grid_total_apparent_power":  float(unpack_from("<I", buffer, 142)[0]),
+        "power_consumption":                int(unpack_from("<I", buffer, 226)[0]),
     }
 
 
