@@ -18,23 +18,23 @@ def _extract_data(buffer):
         "inverter_temperature":             0.1 * unpack_from("<H", buffer, 48)[0],   # ºC
         "dc_voltage_1":                     0.1 * unpack_from("<H", buffer, 50)[0],   # V
         "dc_voltage_2":                     0.1 * unpack_from("<H", buffer, 52)[0],   # V
-        "dc_current_1":                   0.1 * unpack_from("<H", buffer, 54)[0],   # A
-        "dc_current_2":                   0.1 * unpack_from("<H", buffer, 56)[0],   # A
+        "dc_current_1":                     0.1 * unpack_from("<H", buffer, 54)[0],   # A
+        "dc_current_2":                     0.1 * unpack_from("<H", buffer, 56)[0],   # A
         "unknown_3":                        int(unpack_from("<I", buffer, 58)[0]),    # ???
-        "solar_ac_current":               0.1 * unpack_from("<H", buffer, 62)[0],   # A
+        "solar_ac_current":                 0.1 * unpack_from("<H", buffer, 62)[0],   # A
         "unknown_4":                        int(unpack_from("<I", buffer, 64)[0]),    # ???
         "ac_voltage":                       0.1 * unpack_from("<H", buffer, 68)[0],   # V
         "ac_frequency":                     0.01 * unpack_from("<H", buffer, 70)[0],  # Hz
         "solar_active_power":               int(unpack_from("<I", buffer, 72)[0]),    # W
-        "solar_active_energy_today":           0.01 * unpack_from("<I", buffer, 76)[0],  # kWh
+        "solar_active_energy_today":        0.01 * unpack_from("<I", buffer, 76)[0],  # kWh
         "unknown_6":                        int(unpack_from("<L", buffer, 80)[0]),    # ??? Power generated this month (x 0.1)?
         # 88 - 107 ???
         "unknown_7":                        int(unpack_from("<I", buffer, 108)[0]),   # ???
         "unknown_8":                        int(unpack_from("<I", buffer, 112)[0]),   # ??? # or maybe 2 fields of 16 bits?
         "dc_power":                         int(unpack_from("<I", buffer, 116)[0]),   # W
-        "solar_active_energy_total":        int(unpack_from("<L", buffer, 120)[0]),   # equals 130 # kWh
+        "solar_active_energy_this_month":   int(unpack_from("<L", buffer, 120)[0]),   # kWh
         "solar_active_energy_yesterday":    0.1 * unpack_from("<H", buffer, 128)[0],  # kWh
-        "solar_active_energy_total_b":      int(unpack_from("<L", buffer, 130)[0]),   # ??? Power generated this month?
+        "solar_active_energy_total":        int(unpack_from("<L", buffer, 130)[0]),   # kWh
         "unknown_10":                       int(unpack_from("<H", buffer, 138)[0]),   # ???
         "unknown_11":                       int(unpack_from("<H", buffer, 140)[0]),   # ???
         "solar_apparent_power":             int(unpack_from("<I", buffer, 142)[0]),   # W
@@ -100,7 +100,7 @@ class LoggerServer:
         writer.close()
         # Convert data to dict and pass to on_data
         if data[4] == 0x42:
-            _LOGGER.error(' '.join(format(x, '02x') for x in data))
+            # _LOGGER.error(' '.join(format(x, '02x') for x in data))
             self.on_data(_extract_data(data))
 
     async def start_server(self):

@@ -31,18 +31,18 @@ class LoggerServerEntity(Entity):
     name = 'Solis/Ginglong Local Logger Server'
 
     def __init__(self, hass: HomeAssistantType, config_data: Dict[str, Any], async_add_entities: AddEntitiesCallback):
-        _LOGGER.error("Config data: %s", config_data)
+        # _LOGGER.error("Config data: %s", config_data)
         self.hass = hass
         self._server = LoggerServer(config_data[LISTENING_PORT], self._on_data)
         self._async_add_entities = async_add_entities
         self._inverters = dict()
 
     def _on_data(self, data: Dict[str, Any]):
-        _LOGGER.error("Got data: %s", data)
+        # _LOGGER.error("Got data: %s", data)
         inverter_id = data["inverter_serial_number"].lower()
         inverter_logger = self._inverters.get(inverter_id, None)
         if inverter_logger is None:
-            _LOGGER.error("Creating new inverter logger for %s", inverter_id)
+            # _LOGGER.error("Creating new inverter logger for %s", inverter_id)
             inverter_logger = InverterLoggerComponent(self.hass, self._async_add_entities, inverter_id)
             self._inverters[inverter_id] = inverter_logger
         inverter_logger.set_data(data)
@@ -234,6 +234,15 @@ ENTITIES_DESCRIPTIONS = [
         name='Solar active energy total',
         key='solar_active_energy_total',
         get_value=lambda x: x.data['solar_active_energy_total'],
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL,
+        icon='mdi:solar-power',
+    ),
+    LoggerSensorEntityDescription(
+        name='Solar active this month',
+        key='solar_active_energy_this_month',
+        get_value=lambda x: x.data['solar_active_energy_this_month'],
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,

@@ -50,7 +50,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except CannotCreateServer:
             errors["base"] = "cannot_create_server"
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
+            # _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(title="Solis/Ginlong Local Logger Server", data=user_input)
