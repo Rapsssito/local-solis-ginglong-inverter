@@ -29,6 +29,7 @@ async def async_setup_entry(
 class LoggerServerEntity(Entity):
     should_poll = False
     name = 'Solis/Ginglong Local Logger Server'
+    suggested_object_id = 'solis_local_logger_server_entity'
 
     def __init__(self, hass: HomeAssistantType, config_data: Dict[str, Any], async_add_entities: AddEntitiesCallback):
         # _LOGGER.error("Config data: %s", config_data)
