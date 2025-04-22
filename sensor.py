@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription, SensorEntity, SensorStateClass
 from homeassistant.helpers.entity import Entity, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.const import FREQUENCY_HERTZ, TEMP_CELSIUS, ELECTRIC_POTENTIAL_VOLT, POWER_WATT, ELECTRIC_CURRENT_AMPERE, ENERGY_KILO_WATT_HOUR, POWER_VOLT_AMPERE
+from homeassistant.const import UnitOfFrequency, UnitOfTemperature, UnitOfElectricPotential, UnitOfPower, UnitOfElectricCurrent, UnitOfEnergy, UnitOfApparentPower
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import DOMAIN, LISTENING_PORT
@@ -65,6 +65,7 @@ class InverterLoggerComponent:
         self.inverter_id = inverter_id
         self.hass = hass
         self.entities = [InverterLoggerBaseEntity(self, entity_desc) for entity_desc in ENTITIES_DESCRIPTIONS]
+        self.data = None
         async_add_entities(self.entities)
 
     def set_data(self, data: Dict[str, Any]):
@@ -82,36 +83,12 @@ class LoggerSensorEntityDescription(SensorEntityDescription):
 
 
 ENTITIES_DESCRIPTIONS = [
-    # LoggerSensorEntityDescription(
-    #     name='Net power usage',
-    #     key='net_power_usage',
-    #     get_value=lambda x: x.data['power_consumption'] - x.data['ac_output_power'],
-    #     device_class=SensorDeviceClass.POWER,
-    #     native_unit_of_measurement=POWER_WATT,
-    #     state_class=SensorStateClass.TOTAL,
-    # ),
-    # LoggerSensorEntityDescription(
-    #     name='Grid power consumption',
-    #     key='grid_power_consumption',
-    #     get_value=lambda x: max(x.data['power_consumption'] - x.data['total_dc_input_power'], 0),
-    #     device_class=SensorDeviceClass.ENERGY,
-    #     native_unit_of_measurement=ENERGY_WATT_HOUR,
-    #     state_class=SensorStateClass.TOTAL,
-    # ),
-    # LoggerSensorEntityDescription(
-    #     name='Grid power return',
-    #     key='grid_power_return',
-    #     get_value=lambda x: max(x.data['total_dc_input_power'] - x.data['power_consumption'], 0),
-    #     device_class=SensorDeviceClass.ENERGY,
-    #     native_unit_of_measurement=ENERGY_WATT_HOUR,
-    #     state_class=SensorStateClass.TOTAL,
-    # ),
     LoggerSensorEntityDescription(
         name='Load active power',
         key='load_active_power',
         get_value=lambda x: x.data['solar_active_power']-x.data['export_active_power'],
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         icon='mdi:home-lightning-bolt',
     ),
     LoggerSensorEntityDescription(
@@ -119,7 +96,7 @@ ENTITIES_DESCRIPTIONS = [
         key='grid_net_power',
         get_value=lambda x: x.data['export_active_power'],
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         icon='mdi:transmission-tower',
     ),
     LoggerSensorEntityDescription(
@@ -127,7 +104,7 @@ ENTITIES_DESCRIPTIONS = [
         key='grid_export_power',
         get_value=lambda x: max(0, x.data['export_active_power']),
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         icon='mdi:transmission-tower-import',
     ),
     LoggerSensorEntityDescription(
@@ -135,7 +112,7 @@ ENTITIES_DESCRIPTIONS = [
         key='grid_import_power',
         get_value=lambda x: max(0, -x.data['export_active_power']),
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         icon='mdi:transmission-tower-export',
     ),
     LoggerSensorEntityDescription(
@@ -143,14 +120,14 @@ ENTITIES_DESCRIPTIONS = [
         key='inverter_temperature',
         get_value=lambda x: x.data['inverter_temperature'],
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     LoggerSensorEntityDescription(
         name='DC voltage 1',
         key='dc_voltage_1',
         get_value=lambda x: x.data['dc_voltage_1'],
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         icon="mdi:current-dc",
     ),
     LoggerSensorEntityDescription(
@@ -158,7 +135,7 @@ ENTITIES_DESCRIPTIONS = [
         key='dc_voltage_2',
         get_value=lambda x: x.data['dc_voltage_2'],
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         icon="mdi:current-dc",
     ),
     LoggerSensorEntityDescription(
@@ -166,7 +143,7 @@ ENTITIES_DESCRIPTIONS = [
         key='dc_current_1',
         get_value=lambda x: x.data['dc_current_1'],
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         icon="mdi:current-dc",
     ),
     LoggerSensorEntityDescription(
@@ -174,7 +151,7 @@ ENTITIES_DESCRIPTIONS = [
         key='dc_current_2',
         get_value=lambda x: x.data['dc_current_2'],
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         icon="mdi:current-dc",
     ),
     LoggerSensorEntityDescription(
@@ -182,35 +159,35 @@ ENTITIES_DESCRIPTIONS = [
         key='dc_power',
         get_value=lambda x: x.data['dc_power'],
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     LoggerSensorEntityDescription(
         name='AC voltage',
         key='ac_voltage',
         get_value=lambda x: x.data['ac_voltage'],
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
     LoggerSensorEntityDescription(
         name='Solar AC current',
         key='solar_ac_current',
         get_value=lambda x: x.data['solar_ac_current'],
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     LoggerSensorEntityDescription(
         name='AC frequency',
         key='ac_frequency',
         get_value=lambda x: x.data['ac_frequency'],
         device_class=SensorDeviceClass.FREQUENCY,
-        native_unit_of_measurement=FREQUENCY_HERTZ,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
     ),
     LoggerSensorEntityDescription(
         name='Solar active power',
         key='solar_active_power',
         get_value=lambda x: x.data['solar_active_power'],
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         icon='mdi:solar-power',
     ),
     LoggerSensorEntityDescription(
@@ -218,7 +195,7 @@ ENTITIES_DESCRIPTIONS = [
         key='solar_active_energy_today',
         get_value=lambda x: x.data['solar_active_energy_today'],
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
         icon='mdi:solar-power',
     ),
@@ -227,7 +204,7 @@ ENTITIES_DESCRIPTIONS = [
         key='solar_active_energy_yesterday',
         get_value=lambda x: x.data['solar_active_energy_yesterday'],
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
         icon='mdi:solar-power',
     ),
@@ -236,7 +213,7 @@ ENTITIES_DESCRIPTIONS = [
         key='solar_active_energy_total',
         get_value=lambda x: x.data['solar_active_energy_total'],
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
         icon='mdi:solar-power',
     ),
@@ -245,7 +222,7 @@ ENTITIES_DESCRIPTIONS = [
         key='solar_active_energy_this_month',
         get_value=lambda x: x.data['solar_active_energy_this_month'],
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
         icon='mdi:solar-power',
     ),
@@ -288,4 +265,6 @@ class InverterLoggerBaseEntity(SensorEntity):
 
     @property
     def native_value(self) -> Any:
+        if self._inverter.data is None:
+            return None
         return self.get_value(self._inverter)
