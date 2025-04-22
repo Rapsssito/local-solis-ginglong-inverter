@@ -1,9 +1,14 @@
-"""The solis_ginglong_local_logger_server integration."""
+"""The integration setup."""
+
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
+from typing import TYPE_CHECKING
+
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
@@ -11,7 +16,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up solis_ginglong_local_logger_server from a config entry."""
+    """Set up the integration from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     hass_data = dict(entry.data)
     hass.data[DOMAIN][entry.entry_id] = hass_data

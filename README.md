@@ -1,4 +1,4 @@
-# Local Solis/Ginglong Inverter Logger via Wi-Fi LAN for Home Assistant<!-- omit in toc -->
+# Local Solis/Ginglong Inverter Logger via LAN for Home Assistant<!-- omit in toc -->
 
 ## Table of Contents<!-- omit in toc -->
 - [Installation](#installation)
