@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "data": {
-          "listening_port": "[%key:common::config_flow::data::listening_port%]",
+          "listening_port": "[%key:common::config_flow::data::listening_port%]"
         }
       }
     },
