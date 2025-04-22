@@ -6,8 +6,9 @@ from dataclasses import dataclass
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription, SensorEntity, SensorStateClass
 from homeassistant.helpers.entity import Entity, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.const import UnitOfFrequency, UnitOfTemperature, UnitOfElectricPotential, UnitOfPower, UnitOfElectricCurrent, UnitOfEnergy, UnitOfApparentPower
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.const import UnitOfFrequency, UnitOfTemperature, UnitOfElectricPotential, UnitOfPower, UnitOfElectricCurrent, UnitOfEnergy
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LISTENING_PORT
 from .server import LoggerServer
@@ -16,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigType,
     async_add_entities: AddEntitiesCallback,
 ):
@@ -31,19 +32,19 @@ class LoggerServerEntity(Entity):
     name = 'Solis/Ginglong Local Logger Server'
     suggested_object_id = 'solis_local_logger_server_entity'
 
-    def __init__(self, hass: HomeAssistantType, config_data: Dict[str, Any], async_add_entities: AddEntitiesCallback):
-        # _LOGGER.error("Config data: %s", config_data)
+    def __init__(self, hass: HomeAssistant, config_data: Dict[str, Any], async_add_entities: AddEntitiesCallback):
+        _LOGGER.debug("Config data: %s", config_data)
         self.hass = hass
         self._server = LoggerServer(config_data[LISTENING_PORT], self._on_data)
         self._async_add_entities = async_add_entities
-        self._inverters = dict()
+        self._inverters = {}
 
     def _on_data(self, data: Dict[str, Any]):
-        # _LOGGER.error("Got data: %s", data)
+        _LOGGER.debug("Got data: %s", data)
         inverter_id = data["inverter_serial_number"].lower()
         inverter_logger = self._inverters.get(inverter_id, None)
         if inverter_logger is None:
-            # _LOGGER.error("Creating new inverter logger for %s", inverter_id)
+            _LOGGER.debug("Creating new inverter logger for %s", inverter_id)
             inverter_logger = InverterLoggerComponent(self.hass, self._async_add_entities, inverter_id)
             self._inverters[inverter_id] = inverter_logger
         inverter_logger.set_data(data)
@@ -61,7 +62,7 @@ class LoggerServerEntity(Entity):
 
 
 class InverterLoggerComponent:
-    def __init__(self, hass: HomeAssistantType, async_add_entities: AddEntitiesCallback, inverter_id: str):
+    def __init__(self, hass: HomeAssistant, async_add_entities: AddEntitiesCallback, inverter_id: str):
         self.inverter_id = inverter_id
         self.hass = hass
         self.entities = [InverterLoggerBaseEntity(self, entity_desc) for entity_desc in ENTITIES_DESCRIPTIONS]
@@ -86,7 +87,7 @@ ENTITIES_DESCRIPTIONS = [
     LoggerSensorEntityDescription(
         name='Load active power',
         key='load_active_power',
-        get_value=lambda x: x.data['solar_active_power']-x.data['export_active_power'],
+        get_value=lambda x: x.data['solar_active_power'] - x.data['export_active_power'],
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         icon='mdi:home-lightning-bolt',
