@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.1.1 (2025-04-24)
+
+### Bug Fixes
+
+- Add missing version in .toml
+  ([`3db09c3`](https://github.com/Rapsssito/local-solis-ginglong-inverter/commit/3db09c30f71cd96337f4db621300d4de38539b1e))
+
+
 ## v0.1.0 (2025-04-22)
 
 ### Bug Fixes
