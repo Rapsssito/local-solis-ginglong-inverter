@@ -42,7 +42,7 @@ async def async_setup_entry(
 
 
 class LoggerServerEntity(Entity):
-    """ "Representation of a Solis/Ginglong Local Logger server."""
+    """Representation of a Solis/Ginglong Local Logger server."""
 
     should_poll = False
     name = "Solis/Ginglong Local Logger Server"

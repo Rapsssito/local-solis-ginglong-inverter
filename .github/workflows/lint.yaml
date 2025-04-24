@@ -28,7 +28,7 @@ jobs:
           cache: "pip"
 
       - name: Install requirements
-        run: python3 -m pip install .[lint]
+        run: python3 -m pip install ruff==0.11.6 homeassistant>=2024.12.0
 
       - name: Lint
         run: python3 -m ruff check .

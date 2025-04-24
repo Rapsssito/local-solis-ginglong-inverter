@@ -6,7 +6,7 @@ authors = [
     { name = "Rapsssito", email = "contact@rodrigomartin.dev" }
 ]
 version = "0.1.0"
-license = { text = "MIT" }
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = [
     "homeassistant>=2024.12.0",

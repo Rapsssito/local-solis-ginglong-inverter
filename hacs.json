@@ -1,4 +1,5 @@
 {
     "name": "Local Solis/Ginglong Inverter",
-    "homeassistant": "2024.1.0"
+    "homeassistant": "2024.1.0",
+    "hacs": "2.0.1"
 }
