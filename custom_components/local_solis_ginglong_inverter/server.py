@@ -1,5 +1,5 @@
 """
-Mock server for Solis inverter communication.
+Fake server for Solis inverter communication.
 
 This server listens for incoming connections and responds with mock data.
 It is designed to simulate the behavior of a Solis server so that the inverter can send data to it.
@@ -80,7 +80,7 @@ def _mock_server_response(data: bytes) -> bytes:
 
 
 class LoggerServer:
-    """Mock server for Solis inverter communication."""
+    """Fake server for Solis inverter communication."""
 
     def __init__(self, port: int, on_data: callable) -> None:
         """Initialize the server."""
@@ -107,7 +107,8 @@ class LoggerServer:
         if self.server is not None:
             return
         # Create a server that listens on the specified port
-        self.server = await asyncio.start_server(self.__handle_connection, "localhost", self.port)
+        self.server = await asyncio.start_server(self.__handle_connection, "0.0.0.0", self.port)  # noqa: S104
+        _LOGGER.debug(f"Server listening on port {self.port}")
 
     async def stop_server(self) -> None:
         """Stop the server and close all connections."""
@@ -115,4 +116,10 @@ class LoggerServer:
             return
         # Wait for all connections to close
         self.server.close()
-        await self.server.wait_closed()
+        try:
+            await self.server.wait_closed()
+        except asyncio.CancelledError:
+            _LOGGER.warning("Server shutdown cancelled")
+        finally:
+            self.server = None
+            _LOGGER.debug("Server stopped")

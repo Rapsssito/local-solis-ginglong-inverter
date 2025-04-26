@@ -7,6 +7,7 @@
   "documentation": "https://github.com/Rapsssito/local-solis-ginglong-inverter",
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/Rapsssito/local-solis-ginglong-inverter/issues",
+  "loggers": ["custom_integration.local_solis_ginglong_inverter"],
   "requirements": [],
   "version": "0.1.1"
 }

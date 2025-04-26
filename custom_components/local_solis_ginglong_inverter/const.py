@@ -1,5 +1,5 @@
-"""Constants for the solis_ginglong_local_logger_server integration."""
+"""Constants for the integration."""
 
-DOMAIN = "solis_ginglong_local_logger_server"
+DOMAIN = "local_solis_ginglong_inverter"
 
 LISTENING_PORT = "listening_port"
