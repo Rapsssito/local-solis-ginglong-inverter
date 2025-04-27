@@ -5,7 +5,7 @@ readme = "README.md"
 authors = [
     { name = "Rapsssito", email = "contact@rodrigomartin.dev" }
 ]
-version = "0.1.1"
+version = "1.0.0"
 license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = [

@@ -1,6 +1,20 @@
 # CHANGELOG
 
 
+## v1.0.0 (2025-04-27)
+
+### Features
+
+- Stable release
+  ([`f5835dd`](https://github.com/Rapsssito/local-solis-ginglong-inverter/commit/f5835dd1843ab6a30786f01f13d853be807c6c4d))
+
+BREAKING CHANGE: Stable release
+
+### Breaking Changes
+
+- Stable release
+
+
 ## v0.1.1 (2025-04-24)
 
 ### Bug Fixes
