@@ -1,8 +1,6 @@
 # Local Solis/Ginglong Inverter Logger via LAN for Home Assistant<!-- omit in toc -->
 
-Home Assistant integration for Solis/Ginglong inverters using the Wi-Fi datalogger. This integration creates a fake Solis server that listens to the datalogger's requests and responds accordingly, serving as a "machine in the middle attack" to intercept the data. The server is then able to send the data to Home Assistant. This enables the use of the Solis/Ginglong inverter without the need for an outbound connection to the internet. The integration is based on the work of [@planetmarshall](https://github.com/planetmarshall/solis-service).
-
-_In the future, it would be great to add support optionally sending the data to the Solis cloud, so that you can use the Solis app and Home Assistant at the same time. If you are interested in this feature, please open a pull request._
+Home Assistant integration for Solis/Ginglong inverters using the Wi-Fi datalogger. This integration creates a fake Solis server that listens to the datalogger's requests and responds accordingly, serving as a "machine in the middle attack" to intercept the data. The server is then able to send the data to Home Assistant and also optionally forward the data to the Solis cloud (if you still want to use the Solis app at the same time). This enables the use of the Solis/Ginglong inverter without the need for an outbound connection to the internet. The integration is based on the work of [@planetmarshall](https://github.com/planetmarshall/solis-service).
 
 ## Table of Contents<!-- omit in toc -->
 - [Installation](#installation)
