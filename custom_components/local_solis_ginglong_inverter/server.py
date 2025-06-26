@@ -177,7 +177,7 @@ class LoggerServer:
                     response = await self.__handle_fake(addr, header, message)
             else:
                 # Handle the data with the fake server
-                response = await self.__handle_fake(header, message)
+                response = await self.__handle_fake(addr, header, message)
             # Send the response back to the client
             writer.write(response)
             _LOGGER.debug(f"Sent response to {addr}: {' '.join(format(x, '02x') for x in response)}")
