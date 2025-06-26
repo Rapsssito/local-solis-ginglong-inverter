@@ -57,7 +57,7 @@ class LoggerServerEntity(Entity):
         """Initialize the Solis/Ginglong Local Logger server."""
         _LOGGER.debug("Config data: %s", config_data)
         self.hass = hass
-        self._server = LoggerServer(config_data[LISTENING_PORT], self.__on_data, forward=config_data[FORWARD_MODE])
+        self._server = LoggerServer(config_data[LISTENING_PORT], self.__on_data, forward=config_data.get(FORWARD_MODE, False))
         self._async_add_entities = async_add_entities
         self._inverters = {}
 
