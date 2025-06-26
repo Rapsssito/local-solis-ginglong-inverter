@@ -27,6 +27,8 @@ def _checksum_byte(buffer: bytes) -> int:
 
 def _extract_data(buffer: bytes) -> dict:
     return {
+        # "clock": unpack_from("<B", buffer, 5)[0],  # Clock from heartbeat
+        "timestamp": unpack_from("<I", buffer, 22)[0],  # Unix timestamp
         "inverter_serial_number": buffer[32:48].decode("ascii").rstrip(),
         "inverter_temperature": 0.1 * unpack_from("<H", buffer, 48)[0],  # ºC
         "dc_voltage_1": 0.1 * unpack_from("<H", buffer, 50)[0],  # V
@@ -54,7 +56,7 @@ def _extract_data(buffer: bytes) -> dict:
         # 146 - 181 ???
         "export_active_power": int(unpack_from("<i", buffer, 182)[0]),  # ??? equals 194 and it is signed
         # "unknown_12": int(unpack_from("<L", buffer, 186)[0]),  # ???
-        "export_active_power_b": int(unpack_from("<i", buffer, 194)[0]),  # ??? equals 182 and it is signed
+        # "export_active_power_b": int(unpack_from("<i", buffer, 194)[0]),  # ??? equals 182 and it is signed
         # "unknown_13": int(unpack_from("<I", buffer, 198)[0]),  # ??? equals 210
         # "unknown_14": int(unpack_from("<L", buffer, 202)[0]),  # ???
         # "unknown_13b": int(unpack_from("<I", buffer, 198)[0]),  # ??? equals 198
@@ -144,7 +146,7 @@ class LoggerServer:
             _LOGGER.debug("Received data message")
             # Respond to data message with a mock response
             return self.__build_response(DATA_RESPONSE, data)
-        _LOGGER.warning("Received unknown data")
+        _LOGGER.debug("Received unknown data")
         return None
 
     async def __handle_connection(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
@@ -158,12 +160,12 @@ class LoggerServer:
             # Forward the data to the real server
             response = await self.__handle_forward(data)
             if response is None:
-                _LOGGER.warning(f"Failed to forward data to real server for {addr}")
+                _LOGGER.warning(f"Failed to forward data to real server for {addr}, falling back to fake server")
         if not self.forward or response is None:
             # Handle the data with the fake server
             response = await self.__handle_fake(data)
         if response is None:
-            _LOGGER.warning(f"No response generated to {addr}")
+            _LOGGER.debug(f"No response generated to {addr}")
         else:
             # Send the response back to the client
             writer.write(response)
@@ -174,6 +176,9 @@ class LoggerServer:
             # Read and extract data from the message
             data_extracted = _extract_data(data)
             _LOGGER.debug(f"Extracted data from {addr}: {data_extracted}")
+            if data_extracted["timestamp"] == 0:
+                _LOGGER.debug(f"Timestamp is 0 for {addr}, this is likely an old message, ignoring it")
+                return
             self.on_data(data_extracted)
 
     async def start_server(self) -> None:
