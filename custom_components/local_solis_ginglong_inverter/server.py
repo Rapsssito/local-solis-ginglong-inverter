@@ -3,29 +3,31 @@ Fake server for Solis inverter communication.
 
 This server listens for incoming connections and responds with mock data.
 It is designed to simulate the behavior of a Solis server so that the inverter can send data to it.
+
+Adapted from the original code by @planetmarshall
+and https://github.com/planetmarshall/solis-service/pull/8.
 """
 
 import asyncio
 import datetime
 import logging
 from functools import reduce
-from io import BytesIO
 from struct import pack, unpack_from
+from typing import Any
 
 _LOGGER = logging.getLogger(__name__)
-BUFFER_SIZE = 512
-# Commands
+# Protocol constants
 HEARTBEAT_REQUEST = 0x41
 DATA_REQUEST = 0x42
-HEARTBEAT_RESPONSE = 0x11
-DATA_RESPONSE = 0x12
+START_BYTE = 0xA5
+END_BYTE = 0x15
 
 
 def _checksum_byte(buffer: bytes) -> int:
     return reduce(lambda lrc, x: (lrc + x) & 255, buffer) & 255
 
 
-def _extract_data(buffer: bytes) -> dict:
+def _extract_data(buffer: bytes) -> dict[str, int | float | str]:
     return {
         # "clock": unpack_from("<B", buffer, 5)[0],  # Clock from heartbeat
         "timestamp": unpack_from("<I", buffer, 22)[0],  # Unix timestamp
@@ -68,24 +70,31 @@ def _extract_data(buffer: bytes) -> dict:
     }
 
 
-def _mock_server_response(clock: int, mode: int, data: bytes) -> bytes:
-    unix_time = int(datetime.datetime.now(tz=datetime.UTC).timestamp())
-    buffer = BytesIO()
-    header = b"\xa5\n\x00\x10"
-    buffer.write(header)
-    buffer.write(pack("<B", mode))
-    buffer.write(pack("<B", clock))
-    prefix = data[6:12]
-    buffer.write(prefix)
-    buffer.write(b"\x01")
-    buffer.write(pack("<I", unix_time))
-    suffix = b"\x78\x00\x00\x00"
-    buffer.write(suffix)
-    checksum_data = buffer.getvalue()
-    buffer.write(pack("<B", _checksum_byte(checksum_data[1:])))
-    buffer.write(b"\x15")
+def _parse_header(msghdr: bytes) -> dict[str, int]:
+    [payload_length, msg_type, resp_idx, req_idx, serialno] = unpack_from("<xHxBBBI", msghdr, 0)
+    return {
+        "payload_length": payload_length,
+        "msg_type": msg_type,
+        "resp_idx": resp_idx,
+        "req_idx": req_idx,
+        "serialno": serialno,
+    }
 
-    return buffer.getvalue()
+
+def _mock_server_response(header: dict[str, int], request_payload: bytes) -> bytes:
+    unix_time = int(datetime.datetime.now(tz=datetime.UTC).timestamp())
+
+    payload = pack("<BBIBBBB", request_payload[0], 0x01, unix_time, 0xAA, 0xAA, 0x00, 0x00)
+    # Don't know what 0xaa, 0xaa, 0x00, 0x00, but it is always there and seems to not matter the exact two first bytes
+
+    resp_type = header["msg_type"] - 0x30
+    # Don't know what the second byte means (0x10)
+    header = pack(
+        "<BHBBBBI", START_BYTE, len(payload), 0x10, resp_type, header["req_idx"], header["req_idx"], header["serialno"]
+    )
+    message = header + payload
+    message += pack("BB", _checksum_byte(message[1:]), END_BYTE)
+    return message
 
 
 def _is_heartbeat(data: bytes) -> bool:
@@ -106,25 +115,16 @@ class LoggerServer:
         self.port = port
         self.on_data = on_data
         self.server = None
-        self.__clock = 0
         self.forward = forward
 
-    def __increment_clock(self) -> int:
-        self.__clock = (self.__clock + 1) % 256
-
-    def __build_response(self, mode: int, data: bytes) -> bytes:
-        """Return a mock heartbeat response."""
-        self.__increment_clock()
-        return _mock_server_response(self.__clock, mode, data)
-
-    async def __handle_forward(self, data: bytes) -> bytes | None:
-        # Forward the data to the real server and get the response
-        _LOGGER.debug("Forwarding request to real server")
+    async def __handle_forward(self, addr: Any, message: bytes) -> bytes | None:
+        """Forward the data to the real server."""
+        _LOGGER.debug(f"Forwarding request to real server for {addr}")
         try:
             server_reader, server_writer = await asyncio.open_connection("47.88.8.200", 10000)
-            server_writer.write(data)
-            _LOGGER.debug("Forwarded data to real server")
-            server_data = await server_reader.read(BUFFER_SIZE)
+            server_writer.write(message)
+            await server_writer.drain()
+            server_data = await server_reader.read(2048)
             server_writer.close()
         except (ConnectionRefusedError, TimeoutError, OSError) as e:
             _LOGGER.exception("Connection error with real server", exc_info=e)
@@ -132,54 +132,59 @@ class LoggerServer:
         if len(server_data) == 0:
             return None
         # Send the response back to the client
-        _LOGGER.debug("Got response from real server")
+        _LOGGER.debug(f"Got response from real server for {addr}")
         return server_data
 
-    async def __handle_fake(self, data: bytes) -> bytes | None:
-        # Handle the data with the fake server
-        _LOGGER.debug("Handling request with fake server")
-        if _is_heartbeat(data):
-            _LOGGER.debug("Received heartbeat")
-            # Respond to heartbeat with a mock response
-            return self.__build_response(HEARTBEAT_RESPONSE, data)
-        if _is_data_message(data):
-            _LOGGER.debug("Received data message")
-            # Respond to data message with a mock response
-            return self.__build_response(DATA_RESPONSE, data)
-        _LOGGER.debug("Received unknown data")
-        return None
+    async def __handle_fake(self, addr: Any, msg_header: dict[str, int], message: bytes) -> bytes:
+        """Handle the data with the fake server."""
+        _LOGGER.debug(f"Handling request with fake server for {addr}")
+        return _mock_server_response(msg_header, message)
+
+    async def __handle_persistence(self, addr: Any, message: bytes) -> None:
+        # It is better to handle all the communications before calling on_data
+        if _is_heartbeat(message):
+            # Handle heartbeat message
+            _LOGGER.debug(f"Received HEARTBEAT message from {addr}")
+            # No data to extract, just log the heartbeat
+            return
+        if _is_data_message(message):
+            # Read and extract data from the message
+            data_extracted = _extract_data(message)
+            _LOGGER.debug(f"Received DATA message from {addr}: {data_extracted}")
+            if data_extracted["timestamp"] == 0:
+                _LOGGER.debug("Timestamp is 0, this is likely an old message, ignoring it")
+                return
+            self.on_data(data_extracted)
+            return
+        _LOGGER.debug(f"Received UNKNOWN message from {addr}")
 
     async def __handle_connection(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
-        data = await reader.read(BUFFER_SIZE)
-        if len(data) == 0:
-            return
-        addr = writer.get_extra_info("peername")
-        _LOGGER.debug(f"Received data from {addr}: {' '.join(format(x, '02x') for x in data)}")
-        response = None
-        if self.forward:
-            # Forward the data to the real server
-            response = await self.__handle_forward(data)
-            if response is None:
-                _LOGGER.warning(f"Failed to forward data to real server for {addr}, falling back to fake server")
-        if not self.forward or response is None:
-            # Handle the data with the fake server
-            response = await self.__handle_fake(data)
-        if response is None:
-            _LOGGER.debug(f"No response generated to {addr}")
-        else:
+        while True:
+            msghdr = await reader.readexactly(11)
+            header = _parse_header(msghdr)
+            payload_plus_footer = await reader.readexactly(header["payload_length"] + 2)
+            message = msghdr + payload_plus_footer
+            addr = writer.get_extra_info("peername")
+            _LOGGER.debug(f"Received message from {addr}: {' '.join(format(x, '02x') for x in message)}")
+            if message[0] != START_BYTE or message[-1] != END_BYTE or message[-2] != _checksum_byte(message[1:-2]):
+                _LOGGER.warning(f"Invalid message from {addr}, ignoring it")
+                break
+            if self.forward:
+                # Forward the data to the real server
+                response = await self.__handle_forward(addr, message)
+                if response is None:
+                    _LOGGER.warning(f"Failed to forward data to real server for {addr}, falling back to fake server")
+                    response = await self.__handle_fake(addr, header, message)
+            else:
+                # Handle the data with the fake server
+                response = await self.__handle_fake(header, message)
             # Send the response back to the client
             writer.write(response)
             _LOGGER.debug(f"Sent response to {addr}: {' '.join(format(x, '02x') for x in response)}")
+            # Handle persistence of the data
+            await self.__handle_persistence(addr, message)
+        # Close the connection
         writer.close()
-        # It is better to handle all the communications before calling on_data
-        if _is_data_message(data):
-            # Read and extract data from the message
-            data_extracted = _extract_data(data)
-            _LOGGER.debug(f"Extracted data from {addr}: {data_extracted}")
-            if data_extracted["timestamp"] == 0:
-                _LOGGER.debug(f"Timestamp is 0 for {addr}, this is likely an old message, ignoring it")
-                return
-            self.on_data(data_extracted)
 
     async def start_server(self) -> None:
         """Start the server and listen for incoming connections."""
