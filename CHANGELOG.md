@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.2.1 (2025-06-26)
+
+### Bug Fixes
+
+- Fix typo
+  ([`31fac15`](https://github.com/Rapsssito/local-solis-ginglong-inverter/commit/31fac158241e92a009cf6880564c22c1880f2aa6))
+
+
 ## v1.2.0 (2025-06-26)
 
 ### Bug Fixes

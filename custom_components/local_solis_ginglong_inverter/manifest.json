@@ -9,5 +9,5 @@
   "issue_tracker": "https://github.com/Rapsssito/local-solis-ginglong-inverter/issues",
   "loggers": ["custom_integration.local_solis_ginglong_inverter"],
   "requirements": [],
-  "version": "1.2.0"
+  "version": "1.2.1"
 }
