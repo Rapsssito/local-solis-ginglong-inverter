@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v1.2.0 (2025-06-26)
+
+### Bug Fixes
+
+- Add backwards compatibility with old configurations
+  ([`37d7d19`](https://github.com/Rapsssito/local-solis-ginglong-inverter/commit/37d7d19aa04a0a8dbd2608807e2376e78307e7ee))
+
+### Features
+
+- Improve protocol compatibility
+  ([`68f8d38`](https://github.com/Rapsssito/local-solis-ginglong-inverter/commit/68f8d380e32b43502cbca7ec330362ae5387e5d0))
+
+
 ## v1.1.0 (2025-06-26)
 
 ### Bug Fixes
