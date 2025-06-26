@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v1.1.0 (2025-06-26)
+
+### Bug Fixes
+
+- Ignore out-of-date messages
+  ([`c610b6f`](https://github.com/Rapsssito/local-solis-ginglong-inverter/commit/c610b6f53846cbf1d77f86d3d52039eaa3099a5c))
+
+### Features
+
+- Add optional forward to cloud
+  ([`46f6846`](https://github.com/Rapsssito/local-solis-ginglong-inverter/commit/46f6846e701654aa3f5e09558a5a3d7a22488e5e))
+
+
 ## v1.0.0 (2025-04-27)
 
 ### Features
