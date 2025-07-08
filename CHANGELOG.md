@@ -1,6 +1,21 @@
 # CHANGELOG
 
 
+## v1.3.0 (2025-07-08)
+
+### Bug Fixes
+
+- Fix incorrect FORWARD_MODE schema
+  ([`390e4ed`](https://github.com/Rapsssito/local-solis-ginglong-inverter/commit/390e4ed32cb7a8a0ddd24b4b6c11d22c16d4ff8c))
+
+Fixes #1
+
+### Features
+
+- Add foward host as an optional parameter
+  ([`ae74609`](https://github.com/Rapsssito/local-solis-ginglong-inverter/commit/ae746090b793e1dc84d44ccc5dc0ba3aa5fa760b))
+
+
 ## v1.2.1 (2025-06-26)
 
 ### Bug Fixes
