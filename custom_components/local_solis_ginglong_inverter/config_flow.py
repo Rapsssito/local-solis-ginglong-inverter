@@ -9,7 +9,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN, FORWARD_MODE, LISTENING_PORT
+from .const import DOMAIN, FORWARD_HOST, FORWARD_MODE, LISTENING_PORT
+from .const_defaults import DEFAULT_FORWARD_HOST, DEFAULT_FORWARD_MODE
 
 if TYPE_CHECKING:
     from homeassistant.data_entry_flow import FlowResult
@@ -19,7 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(LISTENING_PORT): vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
-        vol.Optional(FORWARD_MODE, default=False): bool
+        vol.Optional(FORWARD_MODE, default=DEFAULT_FORWARD_MODE): bool,
+        vol.Optional(FORWARD_HOST, default=DEFAULT_FORWARD_HOST): str,
     }
 )
 

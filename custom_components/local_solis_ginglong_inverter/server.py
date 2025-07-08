@@ -15,6 +15,8 @@ from functools import reduce
 from struct import pack, unpack_from
 from typing import Any
 
+from .const_defaults import DEFAULT_FORWARD_HOST, DEFAULT_FORWARD_MODE
+
 _LOGGER = logging.getLogger(__name__)
 # Protocol constants
 HEARTBEAT_REQUEST = 0x41
@@ -110,18 +112,26 @@ def _is_data_message(data: bytes) -> bool:
 class LoggerServer:
     """Fake server for Solis inverter communication."""
 
-    def __init__(self, port: int, on_data: callable, *, forward: bool = False) -> None:
+    def __init__(
+        self,
+        port: int,
+        on_data: callable,
+        *,
+        forward: bool = DEFAULT_FORWARD_MODE,
+        forward_host: str = DEFAULT_FORWARD_HOST,
+    ) -> None:
         """Initialize the server."""
         self.port = port
         self.on_data = on_data
-        self.server = None
         self.forward = forward
+        self.forward_host = forward_host
+        self.__server = None
 
     async def __handle_forward(self, addr: Any, message: bytes) -> bytes | None:
         """Forward the data to the real server."""
         _LOGGER.debug(f"Forwarding request to real server for {addr}")
         try:
-            server_reader, server_writer = await asyncio.open_connection("47.88.8.200", 10000)
+            server_reader, server_writer = await asyncio.open_connection(self.forward_host, 10000)
             server_writer.write(message)
             await server_writer.drain()
             server_data = await server_reader.read(2048)
@@ -188,22 +198,22 @@ class LoggerServer:
 
     async def start_server(self) -> None:
         """Start the server and listen for incoming connections."""
-        if self.server is not None:
+        if self.__server is not None:
             return
         # Create a server that listens on the specified port
-        self.server = await asyncio.start_server(self.__handle_connection, "0.0.0.0", self.port)  # noqa: S104
+        self.__server = await asyncio.start_server(self.__handle_connection, "0.0.0.0", self.port)  # noqa: S104
         _LOGGER.debug(f"Server listening on port {self.port}")
 
     async def stop_server(self) -> None:
         """Stop the server and close all connections."""
-        if self.server is None:
+        if self.__server is None:
             return
         # Wait for all connections to close
-        self.server.close()
+        self.__server.close()
         try:
-            await self.server.wait_closed()
+            await self.__server.wait_closed()
         except asyncio.CancelledError:
             _LOGGER.warning("Server shutdown cancelled")
         finally:
-            self.server = None
+            self.__server = None
             _LOGGER.debug("Server stopped")

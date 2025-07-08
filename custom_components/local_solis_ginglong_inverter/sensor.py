@@ -24,7 +24,8 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, FORWARD_MODE, LISTENING_PORT
+from .const import DOMAIN, FORWARD_HOST, FORWARD_MODE, LISTENING_PORT
+from .const_defaults import DEFAULT_FORWARD_HOST, DEFAULT_FORWARD_MODE
 from .server import LoggerServer
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,7 +59,10 @@ class LoggerServerEntity(Entity):
         _LOGGER.debug("Config data: %s", config_data)
         self.hass = hass
         self._server = LoggerServer(
-            config_data[LISTENING_PORT], self.__on_data, forward=config_data.get(FORWARD_MODE, False)
+            config_data[LISTENING_PORT],
+            self.__on_data,
+            forward=config_data.get(FORWARD_MODE, DEFAULT_FORWARD_MODE),
+            forward_host=config_data.get(FORWARD_HOST, DEFAULT_FORWARD_HOST),
         )
         self._async_add_entities = async_add_entities
         self._inverters = {}

@@ -10,7 +10,9 @@
     "step": {
       "user": {
         "data": {
-          "listening_port": "Listening port"
+          "listening_port": "Listening port",
+          "forward_mode": "Forward mode",
+          "forward_host": "Forward host"
         }
       }
     }

@@ -3,7 +3,9 @@
     "step": {
       "user": {
         "data": {
-          "listening_port": "[%key:common::config_flow::data::listening_port%]"
+          "listening_port": "[%key:common::config_flow::data::listening_port%]",
+          "forward_mode": "[%key:common::config_flow::data::forward_mode%]",
+          "forward_host": "[%key:common::config_flow::data::forward_host%]"
         }
       }
     },
