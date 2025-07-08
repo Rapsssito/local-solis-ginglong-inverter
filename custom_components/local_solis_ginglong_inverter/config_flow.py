@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(LISTENING_PORT): vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
-        vol.Optional(FORWARD_MODE, default=False): vol.All(vol.Coerce(bool), vol.Boolean()),
+        vol.Optional(FORWARD_MODE, default=False): bool
     }
 )
 
